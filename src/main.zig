@@ -5,8 +5,8 @@ const allocPrintZ = std.fmt.allocPrintZ;
 const cwd = std.fs.cwd();
 const File = std.fs.File;
 const bufferedWriter = std.io.bufferedWriter;
-const stdout_print = std.io.getStdOut().writer().print;
-const stderr_print = std.io.getStdErr().writer().print;
+const stdout_writer = std.io.getStdOut().writer();
+const stderr_writer = std.io.getStdErr().writer();
 const WriteError = std.os.WriteError;
 const eql = std.mem.eql;
 const ChildProcess = std.ChildProcess;
@@ -84,17 +84,16 @@ fn pushAllTrieNodes(allocator: Allocator, stack: *Stack, node: *Node) error{OutO
     try push(allocator, stack, node);
 }
 
-
 // data
 const fruits = [_]CString{ "Apple", "Apricot", "Avocado", "Banana", "Bilberry", "Blackberry", "Blackcurrant", "Blueberry", "Boysenberry", "Currant", "Cherry", "Cherimoya", "Chico fruit", "Cloudberry", "Coconut", "Cranberry", "Cucumber", "Custard apple", "Damson", "Date", "Dragonfruit", "Durian", "Elderberry", "Feijoa", "Fig", "Goji berry", "Gooseberry", "Grape", "Raisin", "Grapefruit", "Guava", "Honeyberry", "Huckleberry", "Jabuticaba", "Jackfruit", "Jambul", "Jujube", "Juniper berry", "Kiwano", "Kiwifruit", "Kumquat", "Lemon", "Lime", "Loquat", "Longan", "Lychee", "Mango", "Mangosteen", "Marionberry", "Melon", "Cantaloupe", "Honeydew", "Watermelon", "Miracle fruit", "Mulberry", "Nectarine", "Nance", "Olive", "Orange", "Blood orange", "Clementine", "Mandarine", "Tangerine", "Papaya", "Passionfruit", "Peach", "Pear", "Persimmon", "Physalis", "Plantain", "Plum", "Prune", "Pineapple", "Plumcot", "Pomegranate", "Pomelo", "Purple mangosteen", "Quince", "Raspberry", "Salmonberry", "Rambutan", "Redcurrant", "Salal berry", "Salak", "Satsuma", "Soursop", "Star fruit", "Solanum quitoense", "Strawberry", "Tamarillo", "Tamarind", "Ugli fruit", "Yuzu" };
 
 // utilities
 inline fn print_out(comptime format: []const u8, args: anytype) void {
-    stdout_print(format, args) catch {};
+    stdout_writer.print(format, args) catch {};
 }
 
 inline fn print_err(comptime format: []const u8, args: anytype) void {
-    stderr_print(format, args) catch {};
+    stderr_writer.print(format, args) catch {};
 }
 
 // trie methods
@@ -292,8 +291,8 @@ fn dot(allocator: Allocator, root: *Node, args: [][:0]u8) anyerror!void {
         },
         else => {
             print_err("ERROR: command exited unexpectedly\n", .{});
-        }
-    }    
+        },
+    }
 }
 
 // complete
@@ -332,12 +331,11 @@ pub fn main() anyerror!void {
             \\ SUBCOMMANDS:
             \\ dot                Dump the Trie into a Graphviz dot file.
             \\ complete <prefix>  Suggest prefix autocompletion based on the Trie.
-            ++ "\n"
-        , .{argv[0]});
+        ++ "\n", .{argv[0]});
         return;
     }
 
-    const commands = std.ComptimeStringMap(fn (allocator: Allocator, root: *Node, args: [][:0]u8) anyerror!void, .{
+    const commands = std.ComptimeStringMap(*const fn (std.mem.Allocator, *Node, [][:0]u8) anyerror!void, .{
         .{ "dot", dot },
         .{ "complete", complete },
     });

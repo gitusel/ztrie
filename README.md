@@ -4,6 +4,8 @@ Inspired from Tsoding: https://gitlab.com/tsoding/trie and YouTube video: https:
 
 Using allocators and stacks.
 
+Tested using 0.10.0-dev.4185+9c2fb6e18
+
 ## Quick Start
 
 ### Build
@@ -29,4 +31,3 @@ $ ./zig-out/bin/ztrie complete Ap
 ## References
 
 - https://en.wikipedia.org/wiki/Trie
-
