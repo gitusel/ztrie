@@ -1,5 +1,10 @@
 #!/bin/sh
 
-set -xe
+set -x
 
-zig build -Drelease-safe
+zig build -Doptimize=ReleaseSafe &> /dev/null
+
+if [ $? -ne 0 ]; then
+  echo "Older zig version\n"
+  zig build -Drelease-safe &> /dev/null
+fi
