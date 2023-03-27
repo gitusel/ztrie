@@ -160,7 +160,7 @@ fn trieDeleteHelper(allocator: Allocator, root: *Node, text: CString) ?*Node {
     }
     for (text) |char| {
         var found_in_child = false;
-        for (node.children.items) |child, index| {
+        for (node.children.items, 0..) |child, index| {
             if (child.value == char) {
                 previous_node = node;
                 node_to_remove_index = index;
