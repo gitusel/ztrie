@@ -2,6 +2,7 @@ const std = @import("std");
 const Build = if (@hasDecl(std, "Build")) std.Build else std.build.Builder;
 const OptimizeMode = if (@hasDecl(Build, "standardOptimizeOption")) std.builtin.OptimizeMode else std.builtin.Mode;
 const CompileStep = if (@hasDecl(Build, "standardOptimizeOption")) std.build.CompileStep else std.build.LibExeObjStep;
+const RunStep = std.build.RunStep;
 
 pub fn build(b: *Build) void {
     // Standard target options allows the person running `zig build` to choose
@@ -22,14 +23,21 @@ pub fn build(b: *Build) void {
             .optimize = optimize,
             .target = target,
         });
+        b.installArtifact(exe);
     } else {
         exe = b.addExecutable("ztrie", "src/main.zig");
         exe.setBuildMode(b.standardReleaseOptions());
         exe.setTarget(target);
+        exe.install();
     }
-    exe.install();
 
-    const run_cmd = exe.run();
+    var run_cmd: *RunStep = undefined;
+    if (@hasDecl(Build, "addRunArtifact")) {
+        run_cmd = b.addRunArtifact(exe);
+    } else {
+        run_cmd = exe.run();
+    }
+
     run_cmd.step.dependOn(b.getInstallStep());
     if (b.args) |args| {
         run_cmd.addArgs(args);
@@ -52,5 +60,9 @@ pub fn build(b: *Build) void {
     }
 
     const test_step = b.step("test", "Run unit tests");
-    test_step.dependOn(&exe_tests.run().step);
+    if (@hasDecl(Build, "addRunArtifact")) {
+        test_step.dependOn(&b.addRunArtifact(exe_tests).step);
+    } else {
+        test_step.dependOn(&exe_tests.step);
+    }
 }
